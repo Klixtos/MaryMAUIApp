@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MaryAgent.views.Login"
+             Title="Login">
+    <Grid Padding="20" VerticalOptions="CenterAndExpand" HorizontalOptions="Fill"
+          RowDefinitions="Auto,Auto,Auto, Auto" RowSpacing="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>        
+        <!-- Logo -->
+        <Image Grid.Row ="1" Source="dotnet_bot.png" HorizontalOptions="Center" VerticalOptions="Center" />
+
+        <!-- Login Form -->
+        <VerticalStackLayout Grid.Row="2" Spacing="20">
+            <Entry Placeholder="Username" x:Name="UsernameEntry" HorizontalOptions="FillAndExpand" />
+            <Entry Placeholder="Password" x:Name="PasswordEntry" IsPassword="True" HorizontalOptions="FillAndExpand" />
+            <Button Text="Login" Clicked="Button_Clicked" HorizontalOptions="FillAndExpand" />
+        </VerticalStackLayout>
+
+        <!-- Login with Google -->
+        <Button  Grid.Row="3" Text="Login with Google" Clicked="Google_Button_Clicked" HorizontalOptions="FillAndExpand" />
+    </Grid>
+</ContentPage>

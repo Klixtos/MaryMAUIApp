@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MaryAgent.views.MaryChat"
+             Title="MaryChat">
+    <Grid Padding="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Messages List -->
+        
+        <CollectionView x:Name="MessagesCollectionView"
+                     Grid.Row="0"
+                     ItemsSource="{Binding Messages}"
+                     VerticalOptions="FillAndExpand">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="5" Padding="10" CornerRadius="10" BackgroundColor="{Binding IsUserMessage, Converter={StaticResource BoolToColorConverter}}">
+                        <Label Text="{Binding Text}" />
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Message Input -->
+        <Grid Grid.Row="1" Padding="5" ColumnDefinitions="Auto,*,Auto">
+
+            <Button Text="File"
+                 Grid.Column="0"
+                 VerticalOptions="Center" 
+                    IsEnabled="False"/>
+
+
+            <Entry x:Name="MessageEntry"
+                   Grid.Column="1"
+                Placeholder="Type your message..."
+                VerticalOptions="Center"
+                HorizontalOptions="FillAndExpand" />
+
+            <Button Text="Send"
+                 Grid.Column="2"
+                 VerticalOptions="Center"
+                 Clicked="OnSendClicked" />
+        </Grid>
+    </Grid>
+</ContentPage>
