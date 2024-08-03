@@ -1,5 +1,7 @@
 using MaryAgent.Service;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace MaryAgent.views;
 
@@ -47,12 +49,19 @@ public partial class MaryChat : ContentPage
 
             try
             {
-                Messages.Add(new Message { Text = "Thinking...", IsUserMessage = false });
+                Message message = new Message { Text = "Thinking...", IsUserMessage = false };
 
-                var response = await maryService.Chat(Messages[Messages.Count - 2].Text);
+                Messages.Add(message);
 
-                Messages.RemoveAt(Messages.Count - 1);
-                Messages.Add(new Message { Text = response.response, IsUserMessage = false });
+
+                await foreach ( var maryResponse in maryService.Chat(Messages[Messages.Count - 2].Text))
+                {
+                    message.Text += maryResponse.response;
+                    await Task.Delay(100);
+
+                }
+
+                //Messages.RemoveAt(Messages.Count - 1); // Remove the last thinking message
 
             }
             catch (Exception)
@@ -70,8 +79,24 @@ public partial class MaryChat : ContentPage
     }
 }
 
-public class Message
+public class Message : INotifyPropertyChanged
 {
-    public string Text { get; set; }
+    private string _text;
+    public string Text
+    {
+        get => _text;
+        set
+        {
+            _text = value;
+            OnPropertyChanged();
+        }
+    }
     public bool IsUserMessage { get; set; }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }

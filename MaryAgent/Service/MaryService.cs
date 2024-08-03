@@ -44,7 +44,7 @@ namespace MaryAgent.Service
         //}
 
 
-        public async Task<MaryResponse> Chat(string userInput)
+        public async IAsyncEnumerable<MaryResponse> Chat(string userInput)
         {
 
 
@@ -66,9 +66,6 @@ namespace MaryAgent.Service
             {
                 string requestUri = "https://192.168.0.11:5000/assistant";
 
-                try
-                {
-
                     List<string> filePaths = new List<string>()
                     {
                         @"E:\MaryServer\mary\test_data\c1.txt",
@@ -87,29 +84,32 @@ namespace MaryAgent.Service
                         form.Add(fileContent, "files", Path.GetFileName(filePath));
                     }
 
-                    var response = await client.PostAsync(requestUri, form);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-
-                        var content = await response.Content.ReadAsStringAsync();
-                        MaryResponse maryResponse = new MaryResponse()
-                        { balance = 0, response = content, cost =0 };
-
-                        return maryResponse;
-                    }
-                    else
-                    {
-                        MaryResponse maryResponse = new MaryResponse()
-                        { balance = 0, response = "ERROR", cost = 0 };
-                        return maryResponse;
-                    }
-                }
-                catch (HttpRequestException e)
+                var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
                 {
-                    Debug.WriteLine("\nException Caught!");
-                    Debug.WriteLine($"Message :{e.Message}");
-                    return null;
+                    Content = form
+                };
+
+                using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    response.EnsureSuccessStatusCode();
+
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                    using (var reader = new StreamReader(stream))
+                    {
+                        string line;
+                        while ((line = await reader.ReadLineAsync()) != null)
+                        {
+                            Debug.WriteLine(line);
+                            MaryResponse maryResponse = new MaryResponse()
+                            {
+                                balance = 0,
+                                response = line,
+                                cost = 0
+                            };
+
+                            yield return maryResponse;
+                        }
+                    }
                 }
             }
         }
