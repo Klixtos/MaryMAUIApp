@@ -7,6 +7,7 @@ using System.Text.Json;
 using MaryAgent.Service.Models;
 
 using System.Diagnostics;
+using System.Net.Http.Headers;
 
 namespace MaryAgent.Service
 {
@@ -63,24 +64,46 @@ namespace MaryAgent.Service
             using (HttpClient client = new HttpClient())
 #endif
             {
-                string requestUri = "https://192.168.0.17:5000/chat";
+                string requestUri = "https://192.168.0.11:5000/assistant";
 
                 try
                 {
-                    //send the user input to the server in a json format {'user_input': 'message'}
 
+                    List<string> filePaths = new List<string>()
+                    {
+                        @"E:\MaryServer\mary\test_data\c1.txt",
+                        @"E:\MaryServer\mary\test_data\c2.txt"
+                    };
 
-                    var jsonContent = new StringContent($"{{\"user_input\": \"{userInput}\"}}", Encoding.UTF8, "application/json");
+                    using var form = new MultipartFormDataContent();
 
+                    form.Add(new StringContent(userInput), "user_input");
 
-                    var response = await client.PostAsync(requestUri, jsonContent);
-                    response.EnsureSuccessStatusCode();
-                    var content = await response.Content.ReadAsStringAsync();
-                    var maryResponse = JsonSerializer.Deserialize<MaryResponse>(content);
+                    foreach (var filePath in filePaths)
+                    {
+                        var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                        var fileContent = new StreamContent(fileStream);
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                        form.Add(fileContent, "files", Path.GetFileName(filePath));
+                    }
 
-                    await Task.Delay(2000);
+                    var response = await client.PostAsync(requestUri, form);
 
-                    return maryResponse;
+                    if (response.IsSuccessStatusCode)
+                    {
+
+                        var content = await response.Content.ReadAsStringAsync();
+                        MaryResponse maryResponse = new MaryResponse()
+                        { balance = 0, response = content, cost =0 };
+
+                        return maryResponse;
+                    }
+                    else
+                    {
+                        MaryResponse maryResponse = new MaryResponse()
+                        { balance = 0, response = "ERROR", cost = 0 };
+                        return maryResponse;
+                    }
                 }
                 catch (HttpRequestException e)
                 {

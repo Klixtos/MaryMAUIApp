@@ -9,7 +9,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>        
         <!-- Logo -->
-        <Image Grid.Row ="1" Source="dotnet_bot.png" HorizontalOptions="Center" VerticalOptions="Center" />
+        <!--<Image Grid.Row ="1" Source="dotnet_bot.png" HorizontalOptions="Center" VerticalOptions="Center" />-->
 
         <!-- Login Form -->
         <VerticalStackLayout Grid.Row="2" Spacing="20">
