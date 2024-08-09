@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MaryAgent.views.AssesmentsPage"
+             Title="AssesmentsPage">
+    <Grid>
+        <!-- ListView for displaying assessments -->
+        <CollectionView x:Name="AssessmentCollectionView" Margin="10">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame BorderColor="Gray" CornerRadius="5" Padding="10" Margin="5">
+                        <StackLayout Orientation="Horizontal" VerticalOptions="Center">
+                            <StackLayout Orientation="Vertical" WidthRequest="200">
+                                <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="16"/>
+                                <Label Text="{Binding Date}" FontSize="14"/>
+                            </StackLayout>
+                            <Button Text="Open" WidthRequest="75" Margin="10,0,0,0" HorizontalOptions="EndAndExpand" Clicked="Edit_Assesment_Button_Clicked"/>
+                            <Button Text="Delete" WidthRequest="75" Margin="10,0,0,0" HorizontalOptions="End" Clicked="Delete_Assesment_Button_Clicked"/>
+                        </StackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Floating New Assessment Button -->
+        <Button Text="New Assessment" WidthRequest="150" HeightRequest="50" HorizontalOptions="End" VerticalOptions="End" Margin="10"  
+                Clicked="New_Assesment_Button_Clicked">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="BackgroundColor" Value="DodgerBlue"/>
+                    <Setter Property="TextColor" Value="White"/>
+                    <Setter Property="CornerRadius" Value="25"/>
+                </Style>
+            </Button.Style>
+        </Button>
+    </Grid>
+</ContentPage>

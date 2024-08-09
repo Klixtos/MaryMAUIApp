@@ -10,8 +10,8 @@
 
 
 
-    <FlyoutItem Title="Chat">
-        <ShellContent  ContentTemplate="{DataTemplate views:MaryChat}" />
+    <FlyoutItem Title="Assesments">
+        <ShellContent  ContentTemplate="{DataTemplate views:AssesmentsPage}" />
     </FlyoutItem>
     <FlyoutItem Title="Account">
         <ShellContent ContentTemplate="{DataTemplate views:Account}" />

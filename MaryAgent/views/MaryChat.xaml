@@ -13,7 +13,6 @@
         
         <CollectionView x:Name="MessagesCollectionView"
                      Grid.Row="0"
-                     ItemsSource="{Binding Messages}"
                      VerticalOptions="FillAndExpand">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
@@ -28,9 +27,9 @@
         <Grid Grid.Row="1" Padding="5" ColumnDefinitions="Auto,*,Auto">
 
             <Button Text="File"
-                 Grid.Column="0"
-                 VerticalOptions="Center" 
-                    IsEnabled="False"/>
+                    Grid.Column="0"
+                    VerticalOptions="Center" 
+                    Clicked="OnFileClicked"/>
 
 
             <Entry x:Name="MessageEntry"

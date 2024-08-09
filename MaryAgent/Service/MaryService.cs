@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
 using MaryAgent.Service.Models;
+using Newtonsoft.Json.Linq;
+
 
 using System.Diagnostics;
 using System.Net.Http.Headers;
@@ -13,6 +15,7 @@ namespace MaryAgent.Service
 {
     internal class MaryService
     {
+        static string baseUrl = "https://192.168.0.11:5000";
         //public async Task<string> OAuthLogin(string service = "google")
         //{
         //    if (service == "google")
@@ -44,7 +47,7 @@ namespace MaryAgent.Service
         //}
 
 
-        public async IAsyncEnumerable<MaryResponse> Chat(string userInput)
+        public static async IAsyncEnumerable<MaryResponse> Chat(string thread_id, string userInput , List<string> fileIds)
         {
 
 
@@ -64,25 +67,13 @@ namespace MaryAgent.Service
             using (HttpClient client = new HttpClient())
 #endif
             {
-                string requestUri = "https://192.168.0.11:5000/assistant";
+                string requestUri = $"{baseUrl}/assesment/{thread_id}/run";
 
-                    List<string> filePaths = new List<string>()
-                    {
-                        @"E:\MaryServer\mary\test_data\c1.txt",
-                        @"E:\MaryServer\mary\test_data\c2.txt"
-                    };
+                using var form = new MultipartFormDataContent();
 
-                    using var form = new MultipartFormDataContent();
-
-                    form.Add(new StringContent(userInput), "user_input");
-
-                    foreach (var filePath in filePaths)
-                    {
-                        var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-                        var fileContent = new StreamContent(fileStream);
-                        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                        form.Add(fileContent, "files", Path.GetFileName(filePath));
-                    }
+                form.Add(new StringContent(userInput), "user_input");
+                string fileIdsJson = JsonSerializer.Serialize(fileIds);
+                form.Add(new StringContent(fileIdsJson, System.Text.Encoding.UTF8, "application/json"), "file_ids");
 
                 var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
                 {
@@ -114,6 +105,140 @@ namespace MaryAgent.Service
             }
         }
 
+        public static async Task<string> CreateAssesment()
+        {
+            var handler = new HttpClientHandler();
+            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            handler.ServerCertificateCustomValidationCallback =
+                (httpRequestMessage, cert, cetChain, policyErrors) =>
+                {
+                    return true;
+                };
+
+            //conect to a custom rest server
+#if DEBUG
+            using (HttpClient client = new HttpClient(handler))
+
+#else
+            using (HttpClient client = new HttpClient())
+#endif
+            {
+                HttpResponseMessage response = await client.GetAsync($"{baseUrl}/assesment");
+                response.EnsureSuccessStatusCode();
+                string responseBody = await response.Content.ReadAsStringAsync();
+                var json = JObject.Parse(responseBody);
+                return json["thread_id"].ToString();
+            }
+
+        }
+
+        public static async Task<bool> DeleteAssesment(string thread_id)
+        {
+            var handler = new HttpClientHandler();
+            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            handler.ServerCertificateCustomValidationCallback =
+                (httpRequestMessage, cert, cetChain, policyErrors) =>
+                {
+                    return true;
+                };
+
+            //conect to a custom rest server
+#if DEBUG
+            using (HttpClient client = new HttpClient(handler))
+
+#else
+            using (HttpClient client = new HttpClient())
+#endif
+            {
+                HttpResponseMessage response = await client.DeleteAsync($"{baseUrl}/assesment/{thread_id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    var json = JObject.Parse(responseBody);
+                    if ((bool)json["deleted"])
+                        return true;
+                    return false;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+        }
+
+        public static async Task<string> Uploadfile(string filePath)
+        {
+            var handler = new HttpClientHandler();
+            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            handler.ServerCertificateCustomValidationCallback =
+                (httpRequestMessage, cert, cetChain, policyErrors) =>
+                {
+                    return true;
+                };
+
+            //conect to a custom rest server
+#if DEBUG
+            using (HttpClient client = new HttpClient(handler))
+
+#else
+            using (HttpClient client = new HttpClient())
+#endif
+            {
+                using (var content = new MultipartFormDataContent())
+                {
+                    var fileContent = new ByteArrayContent(System.IO.File.ReadAllBytes(filePath));
+                    fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data");
+                    content.Add(fileContent, "file", System.IO.Path.GetFileName(filePath));
+
+                    var response = await client.PostAsync($"{baseUrl}/assesment/file", content);
+                    response.EnsureSuccessStatusCode();
+
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    var json = JObject.Parse(responseString);
+                    return json["file_id"].ToString();
+                }
+
+            }
+
+        }
+
+        public static async Task<bool> DeleteFile(string file_id)
+        {
+            var handler = new HttpClientHandler();
+            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            handler.ServerCertificateCustomValidationCallback =
+                (httpRequestMessage, cert, cetChain, policyErrors) =>
+                {
+                    return true;
+                };
+
+            //conect to a custom rest server
+#if DEBUG
+            using (HttpClient client = new HttpClient(handler))
+
+#else
+            using (HttpClient client = new HttpClient())
+#endif
+            {
+                HttpResponseMessage response = await client.DeleteAsync($"{baseUrl}/assesment/file/{file_id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    var json = JObject.Parse(responseBody);
+                    if ((bool)json["deleted"])
+                        return true;
+                    return false;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+        }
 
     }
 }

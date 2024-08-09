@@ -1,38 +1,33 @@
 using MaryAgent.Service;
+using MaryAgent.Service.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace MaryAgent.views;
 
-public partial class MaryChat : ContentPage
+public partial class MaryChat : ContentPage, IQueryAttributable
 {
-    public ObservableCollection<Message> Messages { get; set; }
-    MaryService maryService;
+    public static Assesment assesment { get; set; }
+
     public MaryChat()
 	{
 		InitializeComponent();
-        Messages = new ObservableCollection<Message>();
         BindingContext = this;
 
-        Messages.CollectionChanged += (sender, e) =>
-        {
-            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
-            {
-                ScrollToBottom();
-            }
-        };
+        
 
-        maryService = new MaryService();
     }
+
 
     private void ScrollToBottom()
     {
-        if (Messages.Count > 0)
+        if (assesment.Messages.Count > 0)
         {
             Dispatcher.Dispatch(() =>
             {
-                MessagesCollectionView.ScrollTo(Messages[Messages.Count - 1], position: ScrollToPosition.End, animate: true);
+                MessagesCollectionView.ScrollTo(assesment.Messages[assesment.Messages.Count - 1], position: ScrollToPosition.End, animate: true);
             });
         }
     }
@@ -44,21 +39,27 @@ public partial class MaryChat : ContentPage
             Button button = (Button)sender;
             button.IsEnabled = false;
 
-            Messages.Add(new Message { Text = MessageEntry.Text, IsUserMessage = true });
+            assesment.Messages.Add(new Message { Text = MessageEntry.Text, IsUserMessage = true });
             MessageEntry.Text = string.Empty;
 
             try
             {
                 Message message = new Message { Text = "Thinking...", IsUserMessage = false };
 
-                Messages.Add(message);
+                assesment.Messages.Add(message);
 
-
-                await foreach ( var maryResponse in maryService.Chat(Messages[Messages.Count - 2].Text))
+                List<string> file_ids = new List<string>();
+                
+                foreach (var file in assesment.Files)
                 {
-                    message.Text += maryResponse.response;
-                    await Task.Delay(100);
+                    if (file.FileID != null)
+                        file_ids.Add(file.FileID);
+                }
 
+
+                await foreach ( var maryResponse in MaryService.Chat(assesment.ThreadID, assesment.Messages[assesment.Messages.Count - 2].Text, file_ids))
+                {
+                    message.Text += maryResponse.response + "\n";
                 }
 
                 //Messages.RemoveAt(Messages.Count - 1); // Remove the last thinking message
@@ -72,31 +73,41 @@ public partial class MaryChat : ContentPage
             finally
             {
                 button.IsEnabled = true;
+                await AssesmentStorage.SaveAssesmentsAsync(AssesmentsPage.assesments);
             }
 
             
         }
     }
-}
 
-public class Message : INotifyPropertyChanged
-{
-    private string _text;
-    public string Text
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        get => _text;
-        set
+        if (query.ContainsKey("Assesment"))
         {
-            _text = value;
-            OnPropertyChanged();
+            assesment = query["Assesment"] as Assesment;
+
+            this.Title = assesment.ThreadID ;
+
+            MessagesCollectionView.ItemsSource = assesment.Messages;
+
+            assesment.Messages.CollectionChanged += (sender, e) =>
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+                {
+                    ScrollToBottom();
+                }
+            };
+            // do something with the threadID
         }
     }
-    public bool IsUserMessage { get; set; }
 
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private  async void OnFileClicked(object sender, EventArgs e)
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+       await Shell.Current.GoToAsync($"/{nameof(AssesmentFilesPage)}", true, new Dictionary<string, object>() {
+            //initialize to the assesment object
+            { "Assesment", assesment }
+        });
+
     }
 }
+
