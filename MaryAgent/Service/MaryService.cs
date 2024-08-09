@@ -90,11 +90,10 @@ namespace MaryAgent.Service
                         string line;
                         while ((line = await reader.ReadLineAsync()) != null)
                         {
-                            Debug.WriteLine(line);
                             MaryResponse maryResponse = new MaryResponse()
                             {
                                 balance = 0,
-                                response = line,
+                                response = line + "\n",
                                 cost = 0
                             };
 
@@ -132,7 +131,7 @@ namespace MaryAgent.Service
 
         }
 
-        public static async Task<bool> DeleteAssesment(string thread_id)
+        public static async Task<bool> DeleteAssesment(string thread_id, List<string> fileIds)
         {
             var handler = new HttpClientHandler();
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
@@ -150,20 +149,44 @@ namespace MaryAgent.Service
             using (HttpClient client = new HttpClient())
 #endif
             {
-                HttpResponseMessage response = await client.DeleteAsync($"{baseUrl}/assesment/{thread_id}");
 
-                if (response.IsSuccessStatusCode)
+                string requestUri = $"{baseUrl}/assesment/{thread_id}";
+
+                using var form = new MultipartFormDataContent();
+
+                string fileIdsJson = JsonSerializer.Serialize(fileIds);
+                form.Add(new StringContent(fileIdsJson, System.Text.Encoding.UTF8, "application/json"), "file_ids");
+
+                var request = new HttpRequestMessage(HttpMethod.Delete, requestUri)
                 {
+                    Content = form
+                };
+
+                using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    response.EnsureSuccessStatusCode();
+
                     string responseBody = await response.Content.ReadAsStringAsync();
                     var json = JObject.Parse(responseBody);
                     if ((bool)json["deleted"])
                         return true;
                     return false;
                 }
-                else
-                {
-                    return false;
-                }
+
+                //HttpResponseMessage response = await client.DeleteAsync($"{baseUrl}/assesment/{thread_id}");
+
+                //if (response.IsSuccessStatusCode)
+                //{
+                //    string responseBody = await response.Content.ReadAsStringAsync();
+                //    var json = JObject.Parse(responseBody);
+                //    if ((bool)json["deleted"])
+                //        return true;
+                //    return false;
+                //}
+                //else
+                //{
+                //    return false;
+                //}
             }
 
         }

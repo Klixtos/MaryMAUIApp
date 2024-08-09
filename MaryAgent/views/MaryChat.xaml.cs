@@ -1,3 +1,4 @@
+using MaryAgent.extensions;
 using MaryAgent.Service;
 using MaryAgent.Service.Models;
 using System.Collections.ObjectModel;
@@ -11,11 +12,14 @@ public partial class MaryChat : ContentPage, IQueryAttributable
 {
     public static Assesment assesment { get; set; }
 
+    private readonly MarkdownRenderer _markdownRenderer;
+
     public MaryChat()
 	{
 		InitializeComponent();
         BindingContext = this;
 
+        _markdownRenderer = new MarkdownRenderer();
         
 
     }
@@ -56,10 +60,13 @@ public partial class MaryChat : ContentPage, IQueryAttributable
                         file_ids.Add(file.FileID);
                 }
 
+                string full_text = "";
 
-                await foreach ( var maryResponse in MaryService.Chat(assesment.ThreadID, assesment.Messages[assesment.Messages.Count - 2].Text, file_ids))
+                await foreach (var maryResponse in MaryService.Chat(assesment.ThreadID, assesment.Messages[assesment.Messages.Count - 2].Text, file_ids))
                 {
-                    message.Text += maryResponse.response + "\n";
+                    full_text += maryResponse.response;
+                    message.Text = full_text;
+                    System.Diagnostics.Debug.WriteLine(message.Text);
                 }
 
                 //Messages.RemoveAt(Messages.Count - 1); // Remove the last thinking message

@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using MaryAgent.extensions;
 
 namespace MaryAgent.Service.Models
 {
@@ -80,7 +81,7 @@ namespace MaryAgent.Service.Models
     {
         private string _text;
 
-        [JsonPropertyName("files")]
+        [JsonPropertyName("text")]
         public string Text
         {
             get => _text;
@@ -88,8 +89,23 @@ namespace MaryAgent.Service.Models
             {
                 _text = value;
                 OnPropertyChanged();
+                HtmlContent = new MarkdownRenderer().RenderMarkdownToHtml(_text);
             }
         }
+
+        private string _htmlContent;
+        public string HtmlContent
+        {
+            get => _htmlContent;
+            private set
+            {
+                _htmlContent = value;
+                OnPropertyChanged();
+            }
+        }
+
+
+
         [JsonPropertyName("isusermessage")]
         public bool IsUserMessage { get; set; }
 

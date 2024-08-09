@@ -54,7 +54,16 @@ public partial class AssesmentsPage : ContentPage
 	{
 		var _sender = (Button)sender;
 		Assesment s = _sender.Parent.BindingContext as Assesment;
-		bool deleted = await MaryService.DeleteAssesment(s.ThreadID);
+        
+		List<string> file_ids = new List<string>();
+
+        foreach (var file in s.Files)
+        {
+            if (file.FileID != null)
+                file_ids.Add(file.FileID);
+        }
+
+        bool deleted = await MaryService.DeleteAssesment(s.ThreadID, file_ids);
 
 		if (deleted)
 		{
